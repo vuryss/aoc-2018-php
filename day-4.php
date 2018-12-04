@@ -8,7 +8,7 @@ usort($input, function($a, $b) { return strncmp($a, $b, 17); });
 
 // Parse guard data & record most sleep time per guard and most sleep time for each guard per minute.
 $guard = $startSleep = 0;
-$guards = $mostSleepTime = $minuteSleepTime = [];
+$mostSleepTime = $minuteSleepTime = [];
 
 foreach ($input as $line) {
     preg_match('/\d{4}\-(\d{2}\-\d{2})\s\d{2}\:(\d{2}).*?(\w.*)/', $line, $matches);
@@ -23,7 +23,6 @@ foreach ($input as $line) {
 
     if (strpos($matches[3], 'wakes') !== false) {
         for ($i = $startSleep; $i < (int) $matches[2]; $i++) {
-            $guards[$guard][$matches[1]][$i] = true;
             $mostSleepTime[$guard] = ($mostSleepTime[$guard] ?? 0) + 1;
             $minuteSleepTime[$i][$guard] = ($minuteSleepTime[$i][$guard] ?? 0) + 1;
         }
