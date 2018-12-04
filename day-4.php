@@ -36,11 +36,11 @@ $guard = key($mostSleepTime);
 // Find most sleeping guard most lazy day & the guard sleeping most in a given minute
 $max1 = $max2 = $min1 = $min2 = $gid = 0;
 foreach ($minuteSleepTime as $minute => $guards) {
+    isset($guards[$guard]) && $guards[$guard] > $max1
+        && ($max1 = $guards[$guard])
+        && ($min1 = $minute);
+    
     foreach ($guards as $id => $times) {
-        $id === $guard && $times > $max1
-            && ($max1 = $times)
-            && ($min1 = $minute);
-
         $times > $max2
             && ($max2 = $times)
             && ($min2 = $minute)
