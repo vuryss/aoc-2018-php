@@ -4,26 +4,21 @@ $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
 $input = explode("\n", $input);
 
 // Sort
-usort($input, function($a, $b) { return strncmp($a, $b, 17); });
+sort($input);
 
 // Parse guard data & record most sleep time per guard and most sleep time for each guard per minute.
 $guard = $startSleep = 0;
 $mostSleepTime = $minuteSleepTime = [];
 
 foreach ($input as $line) {
-    preg_match('/\d{4}\-(\d{2}\-\d{2})\s\d{2}\:(\d{2}).*?(\w.*)/', $line, $matches);
+    preg_match('/\:(\d{2}).*?(?:(?<guard>\d+)|(?<wakes>wakes)|(?<falls>falls))/', $line, $matches);
 
-    if (preg_match('/#(\d+)/', $matches[3], $m) && $guard = $m[1]) {
-        continue;
-    }
+    $matches['guard'] && $guard = (int) $matches['guard'];
+    isset($matches['falls']) && $startSleep = (int) $matches[1];
 
-    if (strpos($matches[3], 'falls') !== false && $startSleep = (int) $matches[2]) {
-        continue;
-    }
-
-    if (strpos($matches[3], 'wakes') !== false) {
-        for ($i = $startSleep; $i < (int) $matches[2]; $i++) {
-            $mostSleepTime[$guard] = ($mostSleepTime[$guard] ?? 0) + 1;
+    if (isset($matches['wakes'])) {
+        for ($i = $startSleep; $i < (int) $matches[1]; $i++) {
+            $mostSleepTime[$guard]       = ($mostSleepTime[$guard] ?? 0) + 1;
             $minuteSleepTime[$i][$guard] = ($minuteSleepTime[$i][$guard] ?? 0) + 1;
         }
     }
