@@ -2,21 +2,17 @@
 
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
 $input = explode("\n", $input);
+$count = 0;
 
-$grid = $points = $infinite = $area = [];
-
-foreach ($input as $index => $line) {
-    $points[] = explode(', ', $line);
-}
-
-// Part 1
 for ($i = 0; $i < 400; $i++) {
     for ($j = 0; $j < 400; $j++) {
         $min = PHP_INT_MAX;
-        $p = 0;
+        $total = $p = 0;
 
-        foreach ($points as $index => $point) {
-            $dist = abs($point[0] - $i) + abs($point[1] - $j);
+        foreach ($input as $index => $line) {
+            $point = explode(', ', $line);
+            $dist  = abs($point[0] - $i) + abs($point[1] - $j);
+            $total += $dist;
 
             if ($dist < $min) {
                 $min = $dist;
@@ -26,44 +22,20 @@ for ($i = 0; $i < 400; $i++) {
             }
         }
 
-        $grid[$i][$j] = $p;
-
-        if ($i == 0 || $i == 399 || $j == 0 || $j == 399) {
-            $infinite[$grid[$i][$j]] = true;
-        }
-    }
-}
-
-for ($i = 0; $i < 400; $i++) {
-    for ($j = 0; $j < 400; $j++) {
-        if (empty($infinite[$grid[$i][$j]])) {
-            $area[$grid[$i][$j]] = ($area[$grid[$i][$j]] ?? 0) + 1;
-        }
-    }
-}
-
-rsort($area);
-echo 'Answer 1: ' . $area[0] . PHP_EOL;
-
-// Part 2
-$count = 0;
-
-for ($i = 0; $i < 400; $i++) {
-    for ($j = 0; $j < 400; $j++) {
-        $total = 0;
-
-        foreach ($points as $point) {
-            $total += abs($point[0] - $i) + abs($point[1] - $j);
-
-            if ($total >= 10000) {
-                break;
-            }
-        }
-
         if ($total < 10000) {
             $count++;
         }
+
+        $area[$p] = ($area[$p] ?? 0) + 1;
+
+        if ($i == 0 || $i == 399 || $j == 0 || $j == 399) {
+            $infinite[$p] = true;
+        }
     }
 }
 
+$area = array_diff_key($area, $infinite);
+rsort($area);
+
+echo 'Answer 1: ' . $area[0] . PHP_EOL;
 echo 'Answer 2: ' . $count . PHP_EOL;
