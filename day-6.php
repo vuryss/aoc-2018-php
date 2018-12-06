@@ -36,11 +36,9 @@ for ($i = 0; $i < 400; $i++) {
 
 for ($i = 0; $i < 400; $i++) {
     for ($j = 0; $j < 400; $j++) {
-        if (!empty($infinite[$grid[$i][$j]])) {
-            continue;
+        if (empty($infinite[$grid[$i][$j]])) {
+            $area[$grid[$i][$j]] = ($area[$grid[$i][$j]] ?? 0) + 1;
         }
-
-        $area[$grid[$i][$j]] = ($area[$grid[$i][$j]] ?? 0) + 1;
     }
 }
 
