@@ -3,11 +3,11 @@
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
 $input = explode("\n", $input);
 
-$reqs = $available = [];
+$reqs = $initReqs = $available = [];
 
 foreach ($input as $line) {
     $parts = explode(' ', $line);
-    $reqs[$parts[7]][] = $parts[1];
+    $reqs[$parts[7]][] = $initReqs[$parts[7]][] = $parts[1];
     $available[$parts[1]] = true;
 }
 
@@ -19,13 +19,10 @@ $available = $start;
 
 do {
     sort($available);
+    unset($reqs[$available[0]]);
     $result .= array_shift($available);
 
     foreach ($reqs as $step => $requirements) {
-        if (strpos($result, $step) !== false || in_array($step, $available)) {
-            continue;
-        }
-
         foreach ($requirements as $st) {
             if (strpos($result, $st) === false) {
                 continue 2;
@@ -33,23 +30,19 @@ do {
         }
 
         $available[] = $step;
+        unset($reqs[$step]);
     }
 } while (!empty($available));
 
 echo 'Answer 1: ' . $result . PHP_EOL;
 
 // Part 2
-$available    = $start;
-$workers      = array_fill(0, 5, ['idle', null, 0]);
-$second       = 0;
-$notAvailable = [];
-$completed    = [];
-$allIdle      = false;
+[$available, $reqs] = [$start, $initReqs];
+$workers   = array_fill(0, 5, ['idle', null, 0]);
+$second    = 0;
+$completed = $notAvailable = [];
 
-while (!$allIdle) {
-    sort($available);
-    $allIdle = true;
-
+while (count($completed) != strlen($result) && ++$second) {
     foreach ($reqs as $step => $requirements) {
         if (isset($completed[$step]) || isset($notAvailable[$step]) || in_array($step, $available)) {
             continue;
@@ -70,15 +63,11 @@ while (!$allIdle) {
             $notAvailable[array_shift($available)] = true;
         }
 
-        $allIdle = $data[0] !== 'working' && $allIdle;
-
         if ($data[0] === 'working' && $second - $data[2] === ord($data[1]) - 5) {
             $completed[$data[1]] = true;
             $data = ['idle', null, $second];
         }
     }
-
-    $second++;
 }
 
-echo 'Answer 2: ' . ($second - 1) . PHP_EOL;
+echo 'Answer 2: ' . $second . PHP_EOL;
