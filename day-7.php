@@ -3,12 +3,11 @@
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
 $input = explode("\n", $input);
 
-$inp = [];
-$dict = [];
+$reqs = $dict = [];
 
 foreach ($input as $line) {
     $parts = explode(' ', $line);
-    $inp[$parts[7]][] = $parts[1];
+    $reqs[$parts[7]][] = $parts[1];
     $dict[$parts[1]] = true;
     $dict[$parts[7]] = true;
 }
@@ -16,7 +15,7 @@ foreach ($input as $line) {
 $available = [];
 
 foreach ($dict as $part => $dummy) {
-    if (!isset($inp[$part])) {
+    if (!isset($reqs[$part])) {
         $available[] = $part;
     }
 }
@@ -27,7 +26,7 @@ $copy = $available;
 $result = '';
 
 while (strlen($result) != count($dict)) {
-    foreach ($inp as $step => $requirements) {
+    foreach ($reqs as $step => $requirements) {
         if (strpos($result, $step) !== false || in_array($step, $available)) {
             continue;
         }
@@ -64,7 +63,7 @@ $completed = [];
 while (true) {
     sort($available);
 
-    foreach ($inp as $step => $requirements) {
+    foreach ($reqs as $step => $requirements) {
         if (isset($completed[$step]) || isset($notAvailable[$step])) {
             continue;
         }
