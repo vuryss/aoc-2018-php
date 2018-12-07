@@ -3,29 +3,24 @@
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
 $input = explode("\n", $input);
 
-$reqs = $dict = [];
+$reqs = $available = [];
 
 foreach ($input as $line) {
     $parts = explode(' ', $line);
     $reqs[$parts[7]][] = $parts[1];
-    $dict[$parts[1]] = true;
-    $dict[$parts[7]] = true;
+    $available[$parts[1]] = true;
 }
 
-$available = [];
-
-foreach ($dict as $part => $dummy) {
-    if (!isset($reqs[$part])) {
-        $available[] = $part;
-    }
-}
-
-$copy = $available;
+$start = array_keys(array_diff_key($available, $reqs));
 
 // Part 1
-$result = '';
+$result    = '';
+$available = $start;
 
-while (strlen($result) != count($dict)) {
+do {
+    sort($available);
+    $result .= array_shift($available);
+
     foreach ($reqs as $step => $requirements) {
         if (strpos($result, $step) !== false || in_array($step, $available)) {
             continue;
@@ -39,36 +34,24 @@ while (strlen($result) != count($dict)) {
 
         $available[] = $step;
     }
-
-    sort($available);
-    $result .= array_shift($available);
-}
+} while (!empty($available));
 
 echo 'Answer 1: ' . $result . PHP_EOL;
 
 // Part 2
-$available = $copy;
-
-$numWorkers = 5;
-$workers = [];
-
-for ($i = 0; $i < $numWorkers; $i++) {
-    $workers[$i] = ['idle', null, 0];
-}
-
-$second = 0;
+$available    = $start;
+$workers      = array_fill(0, 5, ['idle', null, 0]);
+$second       = 0;
 $notAvailable = [];
-$completed = [];
+$completed    = [];
+$allIdle      = false;
 
-while (true) {
+while (!$allIdle) {
     sort($available);
+    $allIdle = true;
 
     foreach ($reqs as $step => $requirements) {
-        if (isset($completed[$step]) || isset($notAvailable[$step])) {
-            continue;
-        }
-
-        if (in_array($step, $available)) {
+        if (isset($completed[$step]) || isset($notAvailable[$step]) || in_array($step, $available)) {
             continue;
         }
 
@@ -81,29 +64,21 @@ while (true) {
         $available[] = $step;
     }
 
-    foreach ($workers as $index => $data) {
-        if ($data[0] === 'idle') {
-            if (!empty($available)) {
-                $workers[$index] = ['working', $available[0], $second];
-                $notAvailable[$available[0]] = true;
-                array_shift($available);
-            }
+    foreach ($workers as $index => &$data) {
+        if ($data[0] === 'idle' && !empty($available)) {
+            $data = ['working', $available[0], $second];
+            $notAvailable[array_shift($available)] = true;
         }
 
-        $data = $workers[$index];
+        $allIdle = $data[0] !== 'working' && $allIdle;
 
-        if ($data[0] === 'working') {
-            if ($second - $data[2] === ord($data[1]) - 5) {
-                $completed[$data[1]] = true;
-                $workers[$index] = ['idle', null, $second];
-            }
+        if ($data[0] === 'working' && $second - $data[2] === ord($data[1]) - 5) {
+            $completed[$data[1]] = true;
+            $data = ['idle', null, $second];
         }
     }
 
-    if (count($completed) == count($dict)) {
-        break;
-    }
     $second++;
 }
 
-echo 'Answer 2: ' . ($second + 1) . PHP_EOL;
+echo 'Answer 2: ' . ($second - 1) . PHP_EOL;
