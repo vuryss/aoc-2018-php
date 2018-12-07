@@ -60,7 +60,6 @@ for ($i = 0; $i < $numWorkers; $i++) {
 $second = 0;
 $notAvailable = [];
 $completed = [];
-$result = '';
 
 while (true) {
     sort($available);
@@ -98,7 +97,6 @@ while (true) {
             if ($second - $data[2] === ord($data[1]) - 5) {
                 $completed[$data[1]] = true;
                 $workers[$index] = ['idle', null, $second];
-                $result .= $data[1];
             }
         }
     }
