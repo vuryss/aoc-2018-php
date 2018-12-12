@@ -1,6 +1,7 @@
 <?php
 
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
+$start = microtime(true);
 $input = (int) $input;
 
 $cells = [];
@@ -36,15 +37,17 @@ $coord = '';
 
 for ($y = 1; $y <= 300; $y++) {
     for ($x = 1; $x <= 300; $x++) {
-        $maxSize = min(300 - $x + 1, 300 - $y + 1);
+        $maxSize = min(300 - $x + 1, 300 - $y + 1, 50);
 
-        for ($s = 1; $s <= $maxSize; $s++) {
-            $sumPower = 0;
+        $sumPower = $cells[$x][$y];
 
+        for ($s = 2; $s <= $maxSize; $s++) {
             for ($x1 = $x; $x1 < $x + $s; $x1++) {
-                for ($y1 = $y; $y1 < $y + $s; $y1++) {
-                    $sumPower += $cells[$x1][$y1];
-                }
+                $sumPower += $cells[$x1][$y + $s - 1];
+            }
+
+            for ($y1 = $y; $y1 < $y + $s - 1; $y1++) {
+                $sumPower += $cells[$x + $s - 1][$y1];
             }
 
             if ($sumPower > $max) {
@@ -56,3 +59,4 @@ for ($y = 1; $y <= 300; $y++) {
 }
 
 echo 'Answer 2: ' . $coord . PHP_EOL;
+echo 'Execution time: ' . (microtime(true) - $start) . PHP_EOL;
