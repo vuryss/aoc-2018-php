@@ -32,23 +32,28 @@ for ($y = 1; $y <= 297; $y++) {
 
 echo 'Answer 1: ' . $coord . PHP_EOL;
 
+// See https://en.wikipedia.org/wiki/Summed-area_table
 $max = 0;
 $coord = '';
 
 for ($y = 1; $y <= 300; $y++) {
     for ($x = 1; $x <= 300; $x++) {
-        $maxSize = min(300 - $x + 1, 300 - $y + 1, 50);
+        $cells[$x][$y] = $cells[$x][$y]
+            + ($cells[$x][$y - 1] ?? 0)
+            + ($cells[$x - 1][$y] ?? 0)
+            - ($cells[$x - 1][$y - 1] ?? 0);
+    }
+}
 
-        $sumPower = $cells[$x][$y];
+for ($y = 2; $y <= 300; $y++) {
+    for ($x = 2; $x <= 300; $x++) {
+        $maxSize = min(300 - $x + 1, 300 - $y + 1);
 
         for ($s = 2; $s <= $maxSize; $s++) {
-            for ($x1 = $x; $x1 < $x + $s; $x1++) {
-                $sumPower += $cells[$x1][$y + $s - 1];
-            }
-
-            for ($y1 = $y; $y1 < $y + $s - 1; $y1++) {
-                $sumPower += $cells[$x + $s - 1][$y1];
-            }
+            $sumPower = $cells[$x - 1][$y - 1]
+                      + $cells[$x + $s - 1][$y + $s - 1]
+                      - $cells[$x - 1][$y + $s - 1]
+                      - $cells[$x + $s - 1][$y - 1];
 
             if ($sumPower > $max) {
                 $max = $sumPower;
