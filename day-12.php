@@ -1,9 +1,7 @@
 <?php
 
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
-
 $start = microtime(true);
-
 $input = explode("\n", $input);
 
 $state      = str_split(substr($input[0], 15));
