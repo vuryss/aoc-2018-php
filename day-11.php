@@ -29,14 +29,6 @@ for ($y = 1; $y <= 297; $y++) {
     }
 }
 
-for ($y = 1; $y <= 300; $y++) {
-    for ($x = 1; $x <= 300; $x++) {
-        echo str_pad($cells[$x][$y], 4, ' ', STR_PAD_LEFT);
-    }
-
-    echo PHP_EOL;
-}
-
 echo 'Answer 1: ' . $coord . PHP_EOL;
 
 $max = 0;
