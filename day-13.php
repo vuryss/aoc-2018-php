@@ -7,8 +7,14 @@ $grid = [];
 $carts = [];
 $num = 1;
 
-$movesL = ['>' => '^', '^' => '<', '<' => 'v', 'v' => '>'];
-$movesR = ['>' => 'v', 'v' => '<', '<' => '^', '^' => '>'];
+$move    = ['left' => 'straight', 'straight' => 'right', 'right' => 'left'];
+$moves   = [
+    'left'     => ['>' => '^', '^' => '<', '<' => 'v', 'v' => '>'],
+    'right'    => ['>' => 'v', 'v' => '<', '<' => '^', '^' => '>'],
+    'straight' => ['>' => '>', 'v' => 'v', '^' => '^', '<' => '<'],
+];
+$movesLS = ['^' => '<', 'v' => '>', '>' => 'v', '<' => '^'];
+$movesRS = ['^' => '>', 'v' => '<', '>' => '^', '<' => 'v'];
 
 foreach ($input as $line) {
     $grid[] = str_split($line);
@@ -16,21 +22,9 @@ foreach ($input as $line) {
 
 foreach ($grid as $y => $line) {
     foreach ($line as $x => $value) {
-        if (!in_array($value, ['^', 'v', '>', '<'])) {
-            continue;
-        }
-
-        $carts[] = ['x' => $x, 'y' => $y, 'move' => 'left', 'icon' => $value];
-
-        switch ($value) {
-            case '^':
-            case 'v':
-                $grid[$y][$x] = '|';
-                break;
-            case '>':
-            case '<':
-                $grid[$y][$x] = '-';
-                break;
+        if (in_array($value, ['^', 'v', '>', '<'])) {
+            $carts[] = ['x' => $x, 'y' => $y, 'move' => 'left', 'icon' => $value];
+            $grid[$y][$x] = ($value === '^' || $value === 'v') ? '|' : '-';
         }
     }
 }
@@ -40,15 +34,8 @@ $first = false;
 
 while (true) {
     uasort(
-        $carts, function ($a, $b) {
-            if ($a['y'] < $b['y']) {
-                return -1;
-            } elseif ($a['y'] === $b['y'] && $a['x'] < $b['x']) {
-                return -1;
-            }
-
-            return 1;
-        }
+        $carts,
+        function ($a, $b) { return $a['y'] < $b['y'] || $a['y'] === $b['y'] && $a['x'] < $b['x'] ? -1 : 1; }
     );
 
     if (count($carts) === 1) {
@@ -62,24 +49,15 @@ while (true) {
         if (in_array($key, $removed, true)) {
             continue;
         }
-        $targetX = $targetY = 0;
+
+        $targetX = $cart['x'];
+        $targetY = $cart['y'];
+
         switch ($cart['icon']) {
-            case '^':
-                $targetX = $cart['x'];
-                $targetY = $cart['y'] - 1;
-                break;
-            case 'v':
-                $targetX = $cart['x'];
-                $targetY = $cart['y'] + 1;
-                break;
-            case '>':
-                $targetX = $cart['x'] + 1;
-                $targetY = $cart['y'];
-                break;
-            case '<':
-                $targetX = $cart['x'] - 1;
-                $targetY = $cart['y'];
-                break;
+            case '^': $targetY = $cart['y'] - 1; break;
+            case 'v': $targetY = $cart['y'] + 1; break;
+            case '>': $targetX = $cart['x'] + 1; break;
+            case '<': $targetX = $cart['x'] - 1; break;
         }
 
         foreach ($carts as $key2 => $cart2) {
@@ -97,73 +75,19 @@ while (true) {
             }
         }
 
+        $carts[$key]['x'] = $targetX;
+        $carts[$key]['y'] = $targetY;
+
         switch ($grid[$targetY][$targetX]) {
-            case '|':
-                $carts[$key]['y'] = $targetY;
-                break;
-            case '-':
-                $carts[$key]['x'] = $targetX;
-                break;
             case '/':
-                $carts[$key]['x'] = $targetX;
-                $carts[$key]['y'] = $targetY;
-                switch ($cart['icon']) {
-                    case '^':
-                        $carts[$key]['icon'] = '>';
-                        break;
-
-                    case 'v':
-                        $carts[$key]['icon'] = '<';
-                        break;
-
-                    case '>':
-                        $carts[$key]['icon'] = '^';
-                        break;
-
-                    case '<':
-                        $carts[$key]['icon'] = 'v';
-                        break;
-                }
+                $carts[$key]['icon'] = $movesRS[$carts[$key]['icon']];
                 break;
             case '\\':
-                $carts[$key]['x'] = $targetX;
-                $carts[$key]['y'] = $targetY;
-                switch ($cart['icon']) {
-                    case '^':
-                        $carts[$key]['icon'] = '<';
-                        break;
-
-                    case 'v':
-                        $carts[$key]['icon'] = '>';
-                        break;
-
-                    case '>':
-                        $carts[$key]['icon'] = 'v';
-                        break;
-
-                    case '<':
-                        $carts[$key]['icon'] = '^';
-                        break;
-                }
+                $carts[$key]['icon'] = $movesLS[$carts[$key]['icon']];
                 break;
             case '+':
-                $carts[$key]['x'] = $targetX;
-                $carts[$key]['y'] = $targetY;
-                switch ($cart['move']) {
-                    case 'left':
-                        $carts[$key]['icon'] = $movesL[$carts[$key]['icon']];
-                        $carts[$key]['move'] = 'straight';
-                        break;
-
-                    case 'straight':
-                        $carts[$key]['move'] = 'right';
-                        break;
-
-                    case 'right':
-                        $carts[$key]['icon'] = $movesR[$carts[$key]['icon']];
-                        $carts[$key]['move'] = 'left';
-                        break;
-                }
+                $carts[$key]['icon'] = $moves[$cart['move']][$carts[$key]['icon']];
+                $carts[$key]['move'] = $move[$carts[$key]['move']];
                 break;
         }
     }
