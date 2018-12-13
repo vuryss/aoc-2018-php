@@ -1,12 +1,10 @@
 <?php
 
-$input = file_get_contents('input/' . substr(basename(__FILE__), 0, -4));
-$start = microtime(true);
-$input = explode("\n", $input);
-$grid = [];
-$carts = [];
-$num = 1;
-
+$input   = file_get_contents('input/' . substr(basename(__FILE__), 0, -4));
+$start   = microtime(true);
+$input   = explode("\n", $input);
+$grid    = [];
+$carts   = [];
 $move    = ['left' => 'straight', 'straight' => 'right', 'right' => 'left'];
 $moves   = [
     'left'     => ['>' => '^', '^' => '<', '<' => 'v', 'v' => '>'],
@@ -16,11 +14,9 @@ $moves   = [
 $movesLS = ['^' => '<', 'v' => '>', '>' => 'v', '<' => '^'];
 $movesRS = ['^' => '>', 'v' => '<', '>' => '^', '<' => 'v'];
 
-foreach ($input as $line) {
-    $grid[] = str_split($line);
-}
+foreach ($input as $y => $line) {
+    $grid[] = $line = str_split($line);
 
-foreach ($grid as $y => $line) {
     foreach ($line as $x => $value) {
         if (in_array($value, ['^', 'v', '>', '<'])) {
             $carts[] = ['x' => $x, 'y' => $y, 'move' => 'left', 'icon' => $value];
@@ -33,17 +29,17 @@ $removed = [];
 $first = false;
 
 while (true) {
-    uasort(
-        $carts,
-        function ($a, $b) { return $a['y'] < $b['y'] || $a['y'] === $b['y'] && $a['x'] < $b['x'] ? -1 : 1; }
-    );
-
     if (count($carts) === 1) {
         $cart = current($carts);
         echo 'Answer 2: ' . $cart['x'] . ',' . $cart['y'] . PHP_EOL;
         echo 'Execution time: ' . (microtime(true) - $start) . PHP_EOL;
         exit;
     }
+
+    uasort(
+        $carts,
+        function ($a, $b) { return $a['y'] < $b['y'] || $a['y'] === $b['y'] && $a['x'] < $b['x'] ? -1 : 1; }
+    );
 
     foreach ($carts as $key => $cart) {
         if (in_array($key, $removed, true)) {
