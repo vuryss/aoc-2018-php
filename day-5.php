@@ -1,24 +1,27 @@
 <?php
 
 $input = trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
-
-$matches = [];
-
-foreach (range('a', 'z') as $c) {
-    array_push($matches, $c . strtoupper($c), strtoupper($c) . $c);
-}
-
-$results = [];
+$start   = microtime(true);
+$min = PHP_INT_MAX;
 
 foreach (range('`', 'z') as $char) {
-    $chars = str_replace([$char, strtoupper($char)], '', $input);
+    $result = new \Ds\Stack();
+    $chars = strtr($input, [$char => '', strtoupper($char) => '']);
 
-    do $chars = str_replace($matches, '', $chars, $cont);
-    while ($cont);
+    for ($i = 0; $i < strlen($chars); $i++) {
+        if ($result->isEmpty() || strtolower($result->peek()) != strtolower($chars[$i]) || $result->peek() === $chars[$i]) {
+            $result->push($chars[$i]);
+        } else {
+            $result->pop();
+        }
+    }
 
-    $results[$char] = strlen($chars);
+    if ($char === '`') {
+        echo 'Answer 1: ' . $result->count() . PHP_EOL;
+    } else {
+        $min = $result->count() < $min ? $result->count() : $min;
+    }
 }
 
-echo 'Answer 1: ' . $results['`'] . PHP_EOL;
-sort($results);
-echo 'Answer 2: ' . $results[0] . PHP_EOL;
+echo 'Answer 2: ' . $min . PHP_EOL;
+echo 'Execution time: ' . (microtime(true) - $start) . PHP_EOL;
