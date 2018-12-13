@@ -25,7 +25,6 @@ foreach ($input as $y => $line) {
     }
 }
 
-$removed = [];
 $first = false;
 
 while (true) {
@@ -42,7 +41,7 @@ while (true) {
     );
 
     foreach ($carts as $key => $cart) {
-        if (in_array($key, $removed, true)) {
+        if (!isset($carts[$key])) {
             continue;
         }
 
@@ -63,10 +62,7 @@ while (true) {
                     $first = true;
                 }
 
-                unset($carts[$key]);
-                unset($carts[$key2]);
-                $removed[] = $key;
-                $removed[] = $key2;
+                unset($carts[$key], $carts[$key2]);
                 continue 2;
             }
         }
