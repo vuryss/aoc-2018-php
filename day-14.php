@@ -1,12 +1,12 @@
 <?php
 
-$input = (int) trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
-$start = microtime(true);
-
+$input    = (int)trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -4)));
+$start    = microtime(true);
+$target   = $input + 10;
 $recipies = '37';
-$elf1 = 0;
-$elf2 = 1;
-$found = false;
+$elf1     = 0;
+$elf2     = 1;
+$found    = false;
 
 while (true) {
     $recipies .= $recipies[$elf1] + $recipies[$elf2];
@@ -16,7 +16,7 @@ while (true) {
     $elf2 = ($elf2 + $recipies[$elf2] + 1) % $num;
 
     if (!$found) {
-        if ($num > $input + 10) {
+        if ($num > $target) {
             echo 'Answer 1: ' . substr($recipies, $input, 10) . PHP_EOL;
             $found = true;
         }
