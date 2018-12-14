@@ -4,18 +4,16 @@ $input = (int) trim(file_get_contents('input/' . substr(basename(__FILE__), 0, -
 $start = microtime(true);
 
 $recipies = '37';
-$elf1 = [0, 3];
-$elf2 = [1, 7];
+$elf1 = 0;
+$elf2 = 1;
 $found = false;
 
 while (true) {
-    $recipies .= (string) ($elf1[1] + $elf2[1]);
+    $recipies .= $recipies[$elf1] + $recipies[$elf2];
     $num = strlen($recipies);
 
-    $elf1[0] = ($elf1[0] + $elf1[1] + 1) % $num;
-    $elf1[1] = $recipies[$elf1[0]];
-    $elf2[0] = ($elf2[0] + $elf2[1] + 1) % $num;
-    $elf2[1] = $recipies[$elf2[0]];
+    $elf1 = ($elf1 + $recipies[$elf1] + 1) % $num;
+    $elf2 = ($elf2 + $recipies[$elf2] + 1) % $num;
 
     if (!$found) {
         if ($num > $input + 10) {
