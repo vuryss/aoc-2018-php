@@ -37,11 +37,6 @@ class Unit
         return true;
     }
 
-    /**
-     * @param Unit[][] $units
-     *
-     * @return null|Unit
-     */
     public function getEnemy(array $units)
     {
         $positions = [
@@ -51,18 +46,14 @@ class Unit
             [$this->x, $this->y + 1]
         ];
 
-        /** @var Unit[] $enemies */
         $enemies = [];
 
-        foreach ($positions as $position) {
-            if (isset($units[$position[1]][$position[0]])) {
-                $target = $units[$position[1]][$position[0]];
-
-                if (!$target->alive || $target->type === $this->type) {
-                    continue;
-                }
-
-                $enemies[] = $units[$position[1]][$position[0]];
+        foreach ($positions as $p) {
+            if (isset($units[$p[1]][$p[0]])
+                && $units[$p[1]][$p[0]]->alive
+                && $units[$p[1]][$p[0]]->type !== $this->type
+            ) {
+                $enemies[] = $units[$p[1]][$p[0]];
             }
         }
 
@@ -72,12 +63,6 @@ class Unit
 
         usort(
             $enemies,
-            /**
-             * @param Unit $a
-             * @param Unit $b
-             *
-             * @return int
-             */
             function($a, $b) {
                 if ($a->health < $b->health) {
                     return -1;
@@ -98,21 +83,20 @@ class Unit
 }
 
 $map = [];
-/** @var Unit[][] $units */
 $units = [];
 
 foreach ($input as $y => $line) {
     $a = str_split($line);
     foreach ($a as $x => $item) {
         switch ($item) {
-            case '#': $map[$y][$x] = 'block'; break;
-            case '.': $map[$y][$x] = 'empty'; break;
+            case '#': $map[$y][$x] = '#'; break;
+            case '.': $map[$y][$x] = '.'; break;
             case 'E':
-                $map[$y][$x] = 'empty';
+                $map[$y][$x] = '.';
                 $units[$y][$x] = new Unit('E', 200, 3, $x, $y);
                 break;
             case 'G':
-                $map[$y][$x] = 'empty';
+                $map[$y][$x] = '.';
                 $units[$y][$x] = new Unit('G', 200, 3, $x, $y);
                 break;
         }
@@ -129,13 +113,8 @@ while ($attack++) {
     foreach ($input as $y => $line) {
         $a = str_split($line);
         foreach ($a as $x => $item) {
-            switch ($item) {
-                case 'E':
-                    $units[$y][$x] = new Unit('E', 200, $attack, $x, $y);
-                    break;
-                case 'G':
-                    $units[$y][$x] = new Unit('G', 200, 3, $x, $y);
-                    break;
+            if ($item === 'E' || $item === 'G') {
+                $units[$y][$x] = new Unit($item, 200, $item === 'E' ? $attack : 3, $x, $y);
             }
         }
     }
@@ -171,8 +150,9 @@ function isGameOver($units) {
 }
 
 /**
- * @param array $map
+ * @param array    $map
  * @param Unit[][] $units
+ * @param bool     $flag
  *
  * @return int
  */
@@ -193,9 +173,6 @@ function solve($map, $units, $flag = false)
 
                 if ($target = $unit->getEnemy($units)) {
                     $result = $unit->attack($target);
-                    if ($target->health <= 0) {
-                        unset($units[$target->y][$target->x]);
-                    }
                     if ($flag && !$result) {
                         return false;
                     }
@@ -217,15 +194,11 @@ function solve($map, $units, $flag = false)
                         break;
                     }
 
-                    if ($map[$a[1]][$a[0]] === 'block') continue;
+                    if ($map[$a[1]][$a[0]] === '#') continue;
 
-                    if (isset($units[$a[1]][$a[0]])) {
-                        if (!$units[$a[1]][$a[0]]->alive) {
-                            continue;
-                        }
+                    if (isset($units[$a[1]][$a[0]]) && $units[$a[1]][$a[0]]->alive) {
                         if ($units[$a[1]][$a[0]]->type === $unit->type) continue;
                         $closest = $a[2];
-                        $tUnit = $units[$a[1]][$a[0]];
                         $targets[] = [
                             'first' => empty($a[3]) ? [$a[0], $a[1]] : $a[3],
                             'last'  => [$a[0], $a[1]],
@@ -272,9 +245,6 @@ function solve($map, $units, $flag = false)
                 // ATTACK AFTER MOVE
                 if ($target = $unit->getEnemy($units)) {
                     $result = $unit->attack($target);
-                    if ($target->health <= 0) {
-                        unset($units[$target->y][$target->x]);
-                    }
                     if ($flag && !$result) {
                         return false;
                     }
@@ -282,7 +252,6 @@ function solve($map, $units, $flag = false)
                 }
             }
         }
-
     }
 
     $sum = 0;
