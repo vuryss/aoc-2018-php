@@ -7,91 +7,22 @@ list ($part1, $part2) = explode("\n\n\n\n", $input);
 $part1 = explode("\n\n", $part1);
 
 $functions = [
-    'addr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $reg[$a] + $reg[$b];
-        return true;
-    },
-    'addi' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a] + $b;
-        return true;
-    },
-    'mulr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $reg[$a] * $reg[$b];
-        return true;
-    },
-    'muli' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a] * $b;
-        return true;
-    },
-    'banr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $reg[$a] & $reg[$b];
-        return true;
-    },
-    'bani' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a] & $b;
-        return true;
-    },
-    'borr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $reg[$a] | $reg[$b];
-        return true;
-    },
-    'bori' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a] | $b;
-        return true;
-    },
-    'setr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a];
-        return true;
-    },
-    'seti' => function($a, $b, $c, array &$reg) {
-        $reg[$c] = $a;
-        return true;
-    },
-    'gtir' => function($a, $b, $c, array &$reg) {
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $a > $reg[$b] ? 1 : 0;
-        return true;
-    },
-    'gtri' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a] > $b ? 1 : 0;
-        return true;
-    },
-    'gtrr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $reg[$a] > $reg[$b] ? 1 : 0;
-        return true;
-    },
-    'eqir' => function($a, $b, $c, array &$reg) {
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $a === $reg[$b] ? 1 : 0;
-        return true;
-    },
-    'eqri' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        $reg[$c] = $reg[$a] === $b ? 1 : 0;
-        return true;
-    },
-    'eqrr' => function($a, $b, $c, array &$reg) {
-        if ($a < 0 || $a > 3) return false;
-        if ($b < 0 || $b > 3) return false;
-        $reg[$c] = $reg[$a] === $reg[$b] ? 1 : 0;
-        return true;
-    },
+    'addr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] + $reg[$b]; },
+    'addi' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] + $b; },
+    'mulr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] * $reg[$b]; },
+    'muli' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] * $b; },
+    'banr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] & $reg[$b]; },
+    'bani' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] & $b; },
+    'borr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] | $reg[$b]; },
+    'bori' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] | $b; },
+    'setr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a]; },
+    'seti' => function($a, $b, $c, array &$reg) { $reg[$c] = $a; },
+    'gtir' => function($a, $b, $c, array &$reg) { $reg[$c] = $a > $reg[$b] ? 1 : 0; },
+    'gtri' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] > $b ? 1 : 0; },
+    'gtrr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] > $reg[$b] ? 1 : 0; },
+    'eqir' => function($a, $b, $c, array &$reg) { $reg[$c] = $a === $reg[$b] ? 1 : 0; },
+    'eqri' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] === $b ? 1 : 0; },
+    'eqrr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] === $reg[$b] ? 1 : 0; },
 ];
 
 // Part 1
