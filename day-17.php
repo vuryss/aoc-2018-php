@@ -1873,14 +1873,26 @@ while (true) {
 
             while (!empty($drops)) {
                 foreach ($drops as $dkey => $drp) {
+                    echo 'Has drops' . PHP_EOL;
                     unset($drops[$dkey]);
+
+                    if (isset($grid[$drp[1]][$drp[0] + 1]) && isset($grid[$drp[1]][$drp[0] - 1])
+                        && $grid[$drp[1]][$drp[0] + 1] === '~' && $grid[$drp[1]][$drp[0] - 1] === '~'
+                    ) {
+                        $hasWay = true;
+                        continue;
+                    }
+
                     if (!isset($grid[$drp[1]][$drp[0] + 1]) || $grid[$drp[1]][$drp[0] + 1] === '|') {
                         $grid[$drp[1]][$drp[0] + 1] = '~';
                         if (isset($grid[$drp[1] + 1][$drp[0] + 1])) {
                             $drops[] = [$drp[0] + 1, $drp[1]];
                         } else {
+                            echo 'R Adding ' . ($drp[0] + 1) . ',' . $drp[1] . ' to water' . PHP_EOL;
                             $water[] = [$drp[0] + 1, $drp[1]];
+                            print_r($water);
                             $hasWay = true;
+                            $containerStart = null;
                         }
                     }
 
@@ -1889,8 +1901,11 @@ while (true) {
                         if (isset($grid[$drp[1] + 1][$drp[0] - 1])) {
                             $drops[] = [$drp[0] - 1, $drp[1]];
                         } else {
+                            echo 'L Adding ' . ($drp[0] - 1) . ',' . $drp[1] . ' to water' . PHP_EOL;
                             $water[] = [$drp[0] - 1, $drp[1]];
+                            print_r($water);
                             $hasWay = true;
+                            $containerStart = null;
                         }
                     }
 
@@ -1906,10 +1921,14 @@ while (true) {
                 }
             }
 
+            echo 'End cycle! Has way: ' . ($hasWay ? 'yes' : 'no') . PHP_EOL;
+
             // If container full - go up
             if (!$hasWay) {
                 $containerStart[1]--;
+                echo '!Adding ' . ($containerStart[0]) . ',' . $containerStart[1] . ' to water' . PHP_EOL;
                 $water[] = $containerStart;
+                print_r($water);
             }
 
             $containerStart = null;
@@ -1934,7 +1953,7 @@ while (true) {
 
     $sum = 0;
 
-    if ($cycles++ % 471 === 0) {
+    if ($cycles % 1000 === 0) {
         for ($y = $minY; $y <= $maxY; $y++) {
             for ($x = $minX; $x <= $maxX; $x++) {
                 if (isset($grid[$y][$x])) {
@@ -1946,6 +1965,7 @@ while (true) {
             }
             echo PHP_EOL;
         }
+        print_r($water);
         echo 'Sum: ' . $sum . PHP_EOL;
         echo PHP_EOL;
         break;
@@ -1956,13 +1976,13 @@ while (true) {
     //}
 }
 
-for ($y = $minY; $y <= $maxY; $y++) {
-    for ($x = $minX; $x <= $maxX; $x++) {
-        echo $grid[$y][$x] ?? '.';
-    }
-    echo PHP_EOL;
-}
-echo PHP_EOL;
+//for ($y = $minY; $y <= $maxY; $y++) {
+//    for ($x = $minX; $x <= $maxX; $x++) {
+//        echo $grid[$y][$x] ?? '.';
+//    }
+//    echo PHP_EOL;
+//}
+//echo PHP_EOL;
 
 $sum = 0;
 
