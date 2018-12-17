@@ -42,23 +42,20 @@ $cycles = 1;
 
 $lastWater = [];
 
-while (true) {
-    $hasMovement = false;
-
+while (!empty($water)) {
     foreach ($water as $key => $drop) {
+        unset($water[$key]);
+
         if ($drop[1] > $maxY) {
-            unset($water[$key]);
             continue;
         }
 
-        $hasMovement = true;
-
         if (!isset($grid[$drop[1] + 1][$drop[0]])) {
-            $water[$key][1]++;
-            $grid[$drop[1] + 1][$drop[0]] = '|';
-            $lastWater[] = $water[$key];
+            $drop[1]++;
+            $grid[$drop[1]][$drop[0]] = '|';
+            $lastWater[] = $drop;
+            $water[] = [$drop[0], $drop[1]];
         } elseif ($grid[$drop[1] + 1][$drop[0]] === '#' || $grid[$drop[1] + 1][$drop[0]] === '~') {
-            unset($water[$key]);
             $drops = [$drop];
 
             $hasWay = false;
@@ -152,32 +149,20 @@ while (true) {
                     $water[] = end($lastWater);
                 }
             }
-        } elseif ($grid[$drop[1] + 1][$drop[0]] === '|') {
-            unset($water[$key]);
-        } else {
-            echo 'Grid value: ' . $grid[$drop[1] + 1][$drop[0]] . PHP_EOL;
         }
     }
 
     if (empty($water) && !empty($lastWater)) {
         array_push($water, array_pop($lastWater));
     }
-
-    if (empty($water)) {
-        break;
-    }
-
-    $sum = 0;
 }
 
 $sum = 0;
 
 for ($y = $minY; $y <= $maxY; $y++) {
     for ($x = $minX; $x <= $maxX + 1; $x++) {
-        if (isset($grid[$y][$x])) {
-            if ($grid[$y][$x] === '|' || $grid[$y][$x] === '~') {
-                $sum++;
-            }
+        if (isset($grid[$y][$x]) && ($grid[$y][$x] === '|' || $grid[$y][$x] === '~')) {
+            $sum++;
         }
     }
 }
@@ -188,10 +173,8 @@ $sum = 0;
 
 for ($y = $minY; $y <= $maxY; $y++) {
     for ($x = $minX; $x <= $maxX + 1; $x++) {
-        if (isset($grid[$y][$x])) {
-            if ($grid[$y][$x] === '~') {
-                $sum++;
-            }
+        if (isset($grid[$y][$x]) && $grid[$y][$x] === '~') {
+            $sum++;
         }
     }
 }
