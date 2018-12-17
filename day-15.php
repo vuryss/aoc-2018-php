@@ -199,10 +199,7 @@ function solve($map, $units, $flag = false)
                     if (isset($units[$a[1]][$a[0]]) && $units[$a[1]][$a[0]]->alive) {
                         if ($units[$a[1]][$a[0]]->type === $unit->type) continue;
                         $closest = $a[2];
-                        $targets[] = [
-                            'first' => empty($a[3]) ? [$a[0], $a[1]] : $a[3],
-                            'last'  => [$a[0], $a[1]],
-                        ];
+                        $targets[$a[1] . '.' . $a[0]] = empty($a[3]) ? [$a[0], $a[1]] : $a[3];
                     }
 
                     $nextDistance = $a[2] + 1;
@@ -222,33 +219,24 @@ function solve($map, $units, $flag = false)
                     break 3;
                 }
 
-                // MOVE!
-                $moves = [];
+                // MOVE & ATTACK!
+                if (!empty($targets)) {
+                    ksort($targets);
+                    $targets = reset($targets);
 
-                foreach ($targets as $target) {
-                    $last = $target['last'];
-                    $moves[$last[1] . '.' . $last[0]] = $target;
-                }
-
-                ksort($moves);
-
-                foreach ($moves as $target) {
-                    $x2 = $target['first'][0];
-                    $y2 = $target['first'][1];
                     unset($units[$y][$x]);
-                    $unit->x = $x2;
-                    $unit->y = $y2;
-                    $units[$y2][$x2] = $unit;
-                    break;
-                }
+                    $unit->x = $targets[0];
+                    $unit->y = $targets[1];
+                    $units[$targets[1]][$targets[0]] = $unit;
 
-                // ATTACK AFTER MOVE
-                if ($target = $unit->getEnemy($units)) {
-                    $result = $unit->attack($target);
-                    if ($flag && !$result) {
-                        return false;
+                    // ATTACK AFTER MOVE
+                    if ($target = $unit->getEnemy($units)) {
+                        $result = $unit->attack($target);
+                        if ($flag && !$result) {
+                            return false;
+                        }
+                        continue;
                     }
-                    continue;
                 }
             }
         }
