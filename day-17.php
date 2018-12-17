@@ -9,7 +9,8 @@ $minX = 500;
 $maxX = 500;
 $minY = PHP_INT_MAX;
 $maxY = PHP_INT_MIN;
-$water = [[500, 0]];
+$water = new Ds\Deque();
+$water->push([500, 0]);
 
 foreach ($input as $line) {
     preg_match_all('/\d+/', $line, $matches);
@@ -37,14 +38,11 @@ foreach ($input as $line) {
 
 }
 
-$containerStart = null;
-$cycles = 1;
-
 $lastWater = [];
 
-while (!empty($water)) {
-    foreach ($water as $key => $drop) {
-        unset($water[$key]);
+while (!$water->isEmpty()) {
+    while (!$water->isEmpty()) {
+        $drop = $water->shift();
 
         if ($drop[1] > $maxY) {
             continue;
@@ -54,47 +52,43 @@ while (!empty($water)) {
             $drop[1]++;
             $grid[$drop[1]][$drop[0]] = '|';
             $lastWater[] = $drop;
-            $water[] = [$drop[0], $drop[1]];
+            $water->push($drop);
         } elseif ($grid[$drop[1] + 1][$drop[0]] === '#' || $grid[$drop[1] + 1][$drop[0]] === '~') {
             $drops = [$drop];
 
             $hasWay = false;
 
             while (!empty($drops)) {
-                foreach ($drops as $dkey => $drp) {
-                    unset($drops[$dkey]);
+                $drp = array_shift($drops);
 
-                    $right = $grid[$drp[1]][$drp[0] + 1] ?? '.';
-                    $left  = $grid[$drp[1]][$drp[0] - 1] ?? '.';
+                $right = $grid[$drp[1]][$drp[0] + 1] ?? '.';
+                $left  = $grid[$drp[1]][$drp[0] - 1] ?? '.';
 
-                    if ($right === '.') {
-                        $grid[$drp[1]][$drp[0] + 1] = '|';
-                        $lastWater[] = [$drp[0] + 1, $drp[1]];
-                        $down = $grid[$drp[1] + 1][$drp[0] + 1] ?? '.';
-                        if ($down !== '.') {
-                            // If down is not empty - continue flow to right
-                            $drops[] = [$drp[0] + 1, $drp[1]];
-                        } else {
-                            // If down is empty - add new water, do not continue right.
-                            $water[] = [$drp[0] + 1, $drp[1]];
-                            $hasWay = true;
-                            $containerStart = null;
-                        }
+                if ($right === '.') {
+                    $grid[$drp[1]][$drp[0] + 1] = '|';
+                    $lastWater[] = [$drp[0] + 1, $drp[1]];
+                    $down = $grid[$drp[1] + 1][$drp[0] + 1] ?? '.';
+                    if ($down !== '.') {
+                        // If down is not empty - continue flow to right
+                        $drops[] = [$drp[0] + 1, $drp[1]];
+                    } else {
+                        // If down is empty - add new water, do not continue right.
+                        $water->push([$drp[0] + 1, $drp[1]]);
+                        $hasWay = true;
                     }
+                }
 
-                    if ($left === '.') {
-                        $grid[$drp[1]][$drp[0] - 1] = '|';
-                        $lastWater[] = [$drp[0] - 1, $drp[1]];
-                        $down = $grid[$drp[1] + 1][$drp[0] - 1] ?? '.';
-                        if ($down !== '.') {
-                            // If down is not empty - continue flow to left
-                            $drops[] = [$drp[0] - 1, $drp[1]];
-                        } else {
-                            // If down is empty - add new water, do not continue left.
-                            $water[] = [$drp[0] - 1, $drp[1]];
-                            $hasWay = true;
-                            $containerStart = null;
-                        }
+                if ($left === '.') {
+                    $grid[$drp[1]][$drp[0] - 1] = '|';
+                    $lastWater[] = [$drp[0] - 1, $drp[1]];
+                    $down = $grid[$drp[1] + 1][$drp[0] - 1] ?? '.';
+                    if ($down !== '.') {
+                        // If down is not empty - continue flow to left
+                        $drops[] = [$drp[0] - 1, $drp[1]];
+                    } else {
+                        // If down is empty - add new water, do not continue left.
+                        $water->push([$drp[0] - 1, $drp[1]]);
+                        $hasWay = true;
                     }
                 }
             }
@@ -108,7 +102,7 @@ while (!empty($water)) {
                     $current = $grid[$drop[1]][$x] ?? '.';
                     $next = $grid[$drop[1]][$x + 1] ?? '.';
                     if ($current === '|' && $next === '.') {
-                        $water[] = [$x, $drop[1]];
+                        $water->push([$x, $drop[1]]);
                         $hasMore = true;
                         break;
                     }
@@ -120,7 +114,7 @@ while (!empty($water)) {
                     $current = $grid[$drop[1]][$x] ?? '.';
                     $next = $grid[$drop[1]][$x - 1] ?? '.';
                     if ($current === '|' && $next === '.') {
-                        $water[] = [$x, $drop[1]];
+                        $water->push([$x, $drop[1]]);
                         $hasMore = true;
                         break;
                     }
@@ -146,39 +140,33 @@ while (!empty($water)) {
                         }
                     }
                     $lastWater = array_values($lastWater);
-                    $water[] = end($lastWater);
+                    $water->push(end($lastWater));
                 }
             }
         }
     }
 
-    if (empty($water) && !empty($lastWater)) {
-        array_push($water, array_pop($lastWater));
+    if (!empty($lastWater)) {
+        $water->push(array_pop($lastWater));
     }
 }
 
-$sum = 0;
+$sum = $sumStill = 0;
 
 for ($y = $minY; $y <= $maxY; $y++) {
     for ($x = $minX; $x <= $maxX + 1; $x++) {
-        if (isset($grid[$y][$x]) && ($grid[$y][$x] === '|' || $grid[$y][$x] === '~')) {
-            $sum++;
+        if (isset($grid[$y][$x])) {
+            if ($grid[$y][$x] === '|') {
+                $sum++;
+            } elseif ($grid[$y][$x] === '~') {
+                $sum++;
+                $sumStill++;
+            }
         }
     }
 }
 
 echo 'Answer 1: ' . $sum . PHP_EOL;
-
-$sum = 0;
-
-for ($y = $minY; $y <= $maxY; $y++) {
-    for ($x = $minX; $x <= $maxX + 1; $x++) {
-        if (isset($grid[$y][$x]) && $grid[$y][$x] === '~') {
-            $sum++;
-        }
-    }
-}
-
-echo 'Answer 2: ' . $sum . PHP_EOL;
+echo 'Answer 2: ' . $sumStill . PHP_EOL;
 
 echo 'Execution time: ' . (microtime(true) - $start) . PHP_EOL;
