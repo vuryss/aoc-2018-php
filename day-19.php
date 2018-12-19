@@ -49,7 +49,6 @@ echo 'Answer 1: ' . $registers[0] . PHP_EOL;
 $pointer = -1;
 $registers = [1, 0, 0, 0, 0, 0];
 $counter = 0;
-$valueSet = false;
 
 while (++$pointer < $steps) {
     $counter++;
@@ -58,18 +57,17 @@ while (++$pointer < $steps) {
     $functions[$instr[0]]($instr[1], $instr[2], $instr[3], $registers);
     $pointer = $registers[$ipValue];
 
-    if ($counter > 10000 && $pointer === 2) {
-        if (!$valueSet && $registers[5] % $registers[4] === 0) {
-            $registers[2] = $registers[5] / $registers[4];
-            if ($registers[4] > 1) {
-                $valueSet = true;
+    if ($counter > 100) {
+        $sqrt = (int) sqrt($registers[5]);
+        $result = 0;
+        for ($i = 1; $i <= $sqrt; $i++) {
+            if ($registers[5] % $i === 0) {
+                $result += $i + $registers[5] / $i;
             }
-        } else {
-            $registers[2] = $registers[5];
-            $valueSet = false;
         }
+        echo 'Answer 2: ' . $result . PHP_EOL;
+        break;
     }
 }
 
-echo 'Answer 2: ' . $registers[0] . PHP_EOL;
 echo 'Execution time: ' . (microtime(true) - $start) . PHP_EOL;
