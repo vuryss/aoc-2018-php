@@ -32,51 +32,29 @@ $functions = [
     'eqrr' => function($a, $b, $c, array &$reg) { $reg[$c] = $reg[$a] === $reg[$b] ? 1 : 0; },
 ];
 
-// Part 1
-$pointer = -1;
-$registers = [0, 0, 0, 0, 0, 0];
-$counter = 0;
 
-while (++$pointer < $steps) {
-    $instr = $program[$pointer];
-    $registers[$ipValue] = $pointer;
-    $functions[$instr[0]]($instr[1], $instr[2], $instr[3], $registers);
-    $pointer = $registers[$ipValue];
+foreach (range(0, 1) as $part) {
+    $pointer = -1;
+    $registers = [$part, 0, 0, 0, 0, 0];
+    $counter = 0;
 
-    if ($counter++ > 50) {
-        $sqrt = (int) sqrt($registers[5]);
-        $result = 0;
-        for ($i = 1; $i <= $sqrt; $i++) {
-            if ($registers[5] % $i === 0) {
-                $result += $i + $registers[5] / $i;
+    while (++$pointer < $steps) {
+        $instr = $program[$pointer];
+        $registers[$ipValue] = $pointer;
+        $functions[$instr[0]]($instr[1], $instr[2], $instr[3], $registers);
+        $pointer = $registers[$ipValue];
+
+        if ($counter++ > 50) {
+            $sqrt = (int) sqrt($registers[5]);
+            $result = 0;
+            for ($i = 1; $i <= $sqrt; $i++) {
+                if ($registers[5] % $i === 0) {
+                    $result += $i + $registers[5] / $i;
+                }
             }
+            echo 'Answer ' . ($part + 1) . ': ' . $result . PHP_EOL;
+            break;
         }
-        echo 'Answer 1: ' . $result . PHP_EOL;
-        break;
-    }
-}
-
-// Part 2
-$pointer = -1;
-$registers = [1, 0, 0, 0, 0, 0];
-$counter = 0;
-
-while (++$pointer < $steps) {
-    $instr = $program[$pointer];
-    $registers[$ipValue] = $pointer;
-    $functions[$instr[0]]($instr[1], $instr[2], $instr[3], $registers);
-    $pointer = $registers[$ipValue];
-
-    if ($counter++ > 50) {
-        $sqrt = (int) sqrt($registers[5]);
-        $result = 0;
-        for ($i = 1; $i <= $sqrt; $i++) {
-            if ($registers[5] % $i === 0) {
-                $result += $i + $registers[5] / $i;
-            }
-        }
-        echo 'Answer 2: ' . $result . PHP_EOL;
-        break;
     }
 }
 
