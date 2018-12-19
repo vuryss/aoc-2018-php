@@ -35,15 +35,26 @@ $functions = [
 // Part 1
 $pointer = -1;
 $registers = [0, 0, 0, 0, 0, 0];
+$counter = 0;
 
 while (++$pointer < $steps) {
     $instr = $program[$pointer];
     $registers[$ipValue] = $pointer;
     $functions[$instr[0]]($instr[1], $instr[2], $instr[3], $registers);
     $pointer = $registers[$ipValue];
-}
 
-echo 'Answer 1: ' . $registers[0] . PHP_EOL;
+    if ($counter++ > 50) {
+        $sqrt = (int) sqrt($registers[5]);
+        $result = 0;
+        for ($i = 1; $i <= $sqrt; $i++) {
+            if ($registers[5] % $i === 0) {
+                $result += $i + $registers[5] / $i;
+            }
+        }
+        echo 'Answer 1: ' . $result . PHP_EOL;
+        break;
+    }
+}
 
 // Part 2
 $pointer = -1;
@@ -51,13 +62,12 @@ $registers = [1, 0, 0, 0, 0, 0];
 $counter = 0;
 
 while (++$pointer < $steps) {
-    $counter++;
     $instr = $program[$pointer];
     $registers[$ipValue] = $pointer;
     $functions[$instr[0]]($instr[1], $instr[2], $instr[3], $registers);
     $pointer = $registers[$ipValue];
 
-    if ($counter > 100) {
+    if ($counter++ > 50) {
         $sqrt = (int) sqrt($registers[5]);
         $result = 0;
         for ($i = 1; $i <= $sqrt; $i++) {
