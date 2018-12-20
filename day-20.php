@@ -5,11 +5,9 @@ $start = microtime(true);
 
 $input = substr($input, 1, -1);
 $grid = [];
-$minX = $minY = PHP_INT_MAX;
-$maxX = $maxY = PHP_INT_MIN;
 
 function parse($regex, $x, $y) {
-    global $grid, $minX, $minY, $maxX, $maxY;
+    global $grid;
 
     $initX = $x;
     $initY = $y;
@@ -19,15 +17,12 @@ function parse($regex, $x, $y) {
     $brackets = 0;
     $content = '';
 
-    while (count($chars)) {
-        $char = array_shift($chars);
-
+    while ($char = array_shift($chars)) {
         if ($group) {
             if ($char === ')' && $brackets === 1) {
                 $group = false;
-                parse($content, $x, $y);
-                $content = '';
                 $brackets = 0;
+                parse($content, $x, $y);
                 continue;
             }
 
@@ -45,10 +40,11 @@ function parse($regex, $x, $y) {
         if ($char === '(') {
             $group = true;
             $brackets = 1;
+            $content = '';
             continue;
         }
 
-        if (in_array($char, ['N', 'S', 'W', 'E'])) {
+        if ($char !== '|') {
             $grid[$y][$x][] = $char;
         }
 
@@ -62,11 +58,6 @@ function parse($regex, $x, $y) {
                 $y = $initY;
                 break;
         }
-
-        $minX = min($minX, $x);
-        $minY = min($minY, $y);
-        $maxX = max($maxX, $x);
-        $maxY = max($maxY, $y);
     }
 }
 
