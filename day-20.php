@@ -6,27 +6,25 @@ $start = microtime(true);
 $input = substr($input, 1, -1);
 $grid = [];
 
-function parse($regex, $x, $y) {
+function parse(Ds\Queue $queue, $x, $y) {
     global $grid;
 
     $initX = $x;
     $initY = $y;
 
-    $chars = str_split($regex);
-    $group = false;
     $brackets = 0;
-    $content = '';
+    $content = new \Ds\Queue();
 
-    while ($char = array_shift($chars)) {
-        if ($group) {
+    while (!$queue->isEmpty() && $char = $queue->pop()) {
+        if ($brackets) {
             if ($char === ')' && $brackets === 1) {
-                $group = false;
                 $brackets = 0;
                 parse($content, $x, $y);
+                $content = new \Ds\Queue();
                 continue;
             }
 
-            $content .= $char;
+            $content->push($char);
 
             if ($char === '(') {
                 $brackets++;
@@ -38,9 +36,7 @@ function parse($regex, $x, $y) {
         }
 
         if ($char === '(') {
-            $group = true;
             $brackets = 1;
-            $content = '';
             continue;
         }
 
@@ -61,7 +57,9 @@ function parse($regex, $x, $y) {
     }
 }
 
-parse($input, 0, 0);
+$queue = new Ds\Queue(str_split($input));
+
+parse($queue, 0, 0);
 
 $x = $y = 0;
 $queue = [[0, 0, 0]];
