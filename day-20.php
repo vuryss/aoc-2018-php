@@ -62,15 +62,13 @@ $queue = new Ds\Queue(str_split($input));
 parse($queue, 0, 0);
 
 $x = $y = 0;
-$queue = [[0, 0, 0]];
+$queue = new Ds\Queue([[0, 0, 0]]);
+$passed = new Ds\Set(['0.0']);
 $maxDistance = 0;
-$passed = [];
 $count2 = [];
 
-while (!empty($queue)) {
-    $item = array_shift($queue);
+while (!$queue->isEmpty() && $item = $queue->pop()) {
     $maxDistance = $item[2];
-    $passed[$item[0] . '.' . $item[1]] = true;
 
     if ($maxDistance >= 1000) {
         $count2[$item[0] . '.' . $item[1]] = true;
@@ -90,8 +88,9 @@ while (!empty($queue)) {
             case 'E': $next = [$item[0] + 1, $item[1], $item[2] + 1]; break;
         }
 
-        if (!isset($passed[$next[0] . '.' . $next[1]])) {
-            $queue[] = $next;
+        if (!$passed->contains($next[0] . '.' . $next[1])) {
+            $queue->push($next);
+            $passed->add($item[0] . '.' . $item[1]);
         }
     }
 }
