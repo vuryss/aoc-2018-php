@@ -35,7 +35,6 @@ $steps = count($program);
 $pointer = -1;
 $registers = [0, 0, 0, 0, 0, 0];
 $counter = 0;
-$step = false;
 $values = [];
 
 while (++$pointer < $steps) {
