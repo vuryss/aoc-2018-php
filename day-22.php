@@ -68,33 +68,22 @@ while (!$queue->isEmpty() && $item = $queue->pop()) {
     $dirs = [[$x, $y - 1], [$x + 1, $y], [$x, $y + 1], [$x - 1, $y]];
 
     foreach ($dirs as [$x, $y]) if ($x >= 0 && $y >= 0 && !isset($visited[$x][$y][$it])) {
-        if (!isset($map[$y][$x])) {
-            getMapItem($map, $x, $y);
+        $type = getMapItem($map, $x, $y);
+        $forceTorch = $x === $target[0] && $y === $target[1] && $it !== 'T' ? 7 : 0;
+
+        if ($type === $currentType) {
+            $queue->push(
+                ['x' => $x, 'y' => $y, 'it' => $it, 'minutes' => $minutes + 1 + $forceTorch],
+                PHP_INT_MAX - $minutes - 1 - $forceTorch
+            );
+        } else {
+            $possible = current(array_intersect($types[$type], $types[$currentType]));
+            $step = $it === $possible ? 1 + $forceTorch : 8 + $forceTorch;
+            $queue->push(
+                ['x' => $x, 'y' => $y, 'it' => $possible, 'minutes' => $minutes + $step],
+                PHP_INT_MAX - $minutes - $step
+            );
         }
-
-        addQueueItem($queue, $x, $y, $it, $minutes, $currentType);
-    }
-}
-
-function addQueueItem(Ds\PriorityQueue $queue, $x, $y, $item, $minutes, $currentType)
-{
-    global $map, $target, $types;
-
-    $type = $map[$y][$x];
-    $forceTorch = $x === $target[0] && $y === $target[1] && $item !== 'T' ? 7 : 0;
-
-    if ($type === $currentType) {
-        $queue->push(
-            ['x' => $x, 'y' => $y, 'it' => $item, 'minutes' => $minutes + 1 + $forceTorch],
-            PHP_INT_MAX - $minutes - 1 - $forceTorch
-        );
-    } else {
-        $possible = current(array_intersect($types[$type], $types[$currentType]));
-        $step = $item === $possible ? 1 + $forceTorch : 8 + $forceTorch;
-        $queue->push(
-            ['x' => $x, 'y' => $y, 'it' => $possible, 'minutes' => $minutes + $step],
-            PHP_INT_MAX - $minutes - $step
-        );
     }
 }
 
