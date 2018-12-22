@@ -18,7 +18,7 @@ function getMapItem(&$map, $x, $y) : int {
     return $map[$y][$x] ?? $map[$y][$x] = getErosionLevel($x, $y) % 3;
 }
 
-function getErosionLevel($x, $y) {
+function getErosionLevel($x, $y) : int {
     global $target, $depth, $emap;
 
     if (!isset($emap[$y][$x])) {
@@ -70,18 +70,19 @@ while (!$queue->isEmpty() && $item = $queue->pop()) {
     foreach ($dirs as [$x, $y]) if ($x >= 0 && $y >= 0 && !isset($visited[$x][$y][$it])) {
         $type = getMapItem($map, $x, $y);
         $forceTorch = $x === $target[0] && $y === $target[1] && $it !== 'T' ? 7 : 0;
+        $aCoef = abs($target[0] - $x) + abs($target[1] - $y);
 
         if ($type === $currentType) {
             $queue->push(
                 ['x' => $x, 'y' => $y, 'it' => $it, 'minutes' => $minutes + 1 + $forceTorch],
-                PHP_INT_MAX - $minutes - 1 - $forceTorch
+                PHP_INT_MAX - $minutes - 1 - $forceTorch - $aCoef
             );
         } else {
             $possible = current(array_intersect($types[$type], $types[$currentType]));
             $step = $it === $possible ? 1 + $forceTorch : 8 + $forceTorch;
             $queue->push(
                 ['x' => $x, 'y' => $y, 'it' => $possible, 'minutes' => $minutes + $step],
-                PHP_INT_MAX - $minutes - $step
+                PHP_INT_MAX - $minutes - $step - $aCoef
             );
         }
     }
