@@ -49,6 +49,7 @@ echo 'Answer 1: ' . $risk . PHP_EOL;
 $queue = new Ds\PriorityQueue();
 $queue->push(['x' => 0, 'y' =>  0, 'it' => 'T', 'minutes' => 0], PHP_INT_MAX);
 $visited = [];
+$types = [0 => ['T', 'C'], 1 => ['C', 'N'], 2 => ['T', 'N']];
 
 while (!$queue->isEmpty() && $item = $queue->pop()) {
     ['x' => $x, 'y' => $y, 'it' => $it, 'minutes' => $minutes] = $item;
@@ -77,123 +78,23 @@ while (!$queue->isEmpty() && $item = $queue->pop()) {
 
 function addQueueItem(Ds\PriorityQueue $queue, $x, $y, $item, $minutes, $currentType)
 {
-    global $map, $target;
+    global $map, $target, $types;
 
     $type = $map[$y][$x];
+    $forceTorch = $x === $target[0] && $y === $target[1] && $item !== 'T' ? 7 : 0;
 
-    $forceTorch = $x === $target[0] && $y === $target[1];
-
-    if ($type === 0) {
-        if ($item === 'T') {
-            $queue->push(
-                ['x' => $x, 'y' => $y, 'it' => 'T', 'minutes' => $minutes + 1],
-                PHP_INT_MAX - $minutes - 1
-            );
-            if ($currentType === 0) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'C', 'minutes' => $minutes + 8 + ($forceTorch ? 7 : 0)],
-                    PHP_INT_MAX - $minutes - 8 - ($forceTorch ? 7 : 0)
-                );
-            }
-        } elseif ($item === 'C') {
-            if ($currentType === 0) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'T', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-            $queue->push(
-                ['x' => $x, 'y' => $y, 'it' => 'C', 'minutes' => $minutes + 1 + ($forceTorch ? 7 : 0)],
-                PHP_INT_MAX - $minutes - 1 - ($forceTorch ? 7 : 0)
-            );
-        } elseif ($item === 'N') {
-            if ($currentType === 2) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'T', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-            if ($currentType === 1) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'C', 'minutes' => $minutes + 8 + ($forceTorch ? 7 : 0)],
-                    PHP_INT_MAX - $minutes - 8 - ($forceTorch ? 7 : 0)
-                );
-            }
-        }
-    } elseif ($type === 1) {
-        if ($item === 'N') {
-            $queue->push(
-                ['x' => $x, 'y' => $y, 'it' => 'N', 'minutes' => $minutes + 1],
-                PHP_INT_MAX - $minutes - 1
-            );
-            if ($currentType === 1) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'C', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-        } elseif ($item === 'C') {
-            if ($currentType === 1) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'N', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-            $queue->push(
-                ['x' => $x, 'y' => $y, 'it' => 'C', 'minutes' => $minutes + 1],
-                PHP_INT_MAX - $minutes - 1
-            );
-        } elseif ($item === 'T') {
-            if ($currentType === 2) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'N', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-            if ($currentType === 0) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'C', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-        }
-    } elseif ($type === 2) {
-        if ($item === 'T') {
-            $queue->push(
-                ['x' => $x, 'y' => $y, 'it' => 'T', 'minutes' => $minutes + 1],
-                PHP_INT_MAX - $minutes - 1
-            );
-            if ($currentType === 2) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'N', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-        } elseif ($item === 'N') {
-            if ($currentType === 2) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'T', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-            $queue->push(
-                ['x' => $x, 'y' => $y, 'it' => 'N', 'minutes' => $minutes + 1],
-                PHP_INT_MAX - $minutes - 1
-            );
-        } elseif ($item === 'C') {
-            if ($currentType === 0) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'T', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-            if ($currentType === 1) {
-                $queue->push(
-                    ['x' => $x, 'y' => $y, 'it' => 'N', 'minutes' => $minutes + 8],
-                    PHP_INT_MAX - $minutes - 8
-                );
-            }
-        }
+    if ($type === $currentType) {
+        $queue->push(
+            ['x' => $x, 'y' => $y, 'it' => $item, 'minutes' => $minutes + 1 + $forceTorch],
+            PHP_INT_MAX - $minutes - 1 - $forceTorch
+        );
+    } else {
+        $possible = current(array_intersect($types[$type], $types[$currentType]));
+        $step = $item === $possible ? 1 + $forceTorch : 8 + $forceTorch;
+        $queue->push(
+            ['x' => $x, 'y' => $y, 'it' => $possible, 'minutes' => $minutes + $step],
+            PHP_INT_MAX - $minutes - $step
+        );
     }
 }
 
