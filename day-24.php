@@ -6,10 +6,10 @@ $start = microtime(true);
 [$immuneData, $infectionData] = explode("\n\n", $input);
 $immuneData    = array_slice(explode("\n", $immuneData), 1);
 $infectionData = array_slice(explode("\n", $infectionData), 1);
-$immune        = $infection = [];
+$immune = $infection = $groups = [];
 $sort = [
-    'byInitiative' => function($a, $b) { return $a->init < $b->init ? 1 : -1; },
-    'byPowerAndInitiative' => function($a, $b) { return $a->power < $b->power ? 1 : ($a->power === $b->power && $a->init < $b->init ? 1 : -1); },
+    'byInitiative' => function($a, $b) { return $a->initiative < $b->initiative ? 1 : -1; },
+    'byPowerAndInitiative' => function($a, $b) { return $a->power < $b->power ? 1 : ($a->power === $b->power && $a->initiative < $b->initiative ? 1 : -1); },
     'byDamagePowerAndInitiative' => function($a, $b) {
         if (key($a) < key($b)) {
             return 1;
@@ -23,132 +23,121 @@ $sort = [
     }
 ];
 
+class UnitGroup
+{
+    public $type;
+    public $count;
+    public $health;
+    public $damage;
+    public $damageType;
+    public $initiative;
+    public $power;
+    public $weakTo = [];
+    public $immuneTo = [];
+    public $target;
+
+    public function __construct($type, $count, $health, $damage, $damageType, $initiative)
+    {
+        $this->type       = $type;
+        $this->count      = $count;
+        $this->health     = $health;
+        $this->damage     = $damage;
+        $this->damageType = $damageType;
+        $this->initiative = $initiative;
+        $this->power      = $this->damage * $this->count;
+    }
+}
+
 foreach ([$immuneData, $infectionData] as $key => $dataArr) {
     foreach ($dataArr as $data) {
-        preg_match(
-            '/(?<units>\d+).*?(?<health>\d+).*?(?<damage>\d+)\s(?<type>\w+).*?(?<initiative>\d+)/',
-            $data,
-            $matches
-        );
-        preg_match('/\((.*)\)/', $data, $attrMatches);
+        preg_match('/(\d+).*?(\d+).*?(?:.*\((.*)\))?.*?(\d+)\s(\w+).*?(\d+)/', $data,$m);
+        $unit = new UnitGroup($key ? 'infection' : 'immune', $m[1], $m[2], $m[4], $m[5], $m[6]);
 
-        $group = (object)[
-            'type'     => $key ? 'infection' : 'immune',
-            'hp'       => (int)$matches['health'],
-            'dmg'      => (int)$matches['damage'],
-            'dmgType'  => $matches['type'],
-            'init'     => (int)$matches['initiative'],
-            'units'    => (int)$matches['units'],
-            'power'    => (int)$matches['damage'] * (int)$matches['units'],
-            'weakTo'   => [],
-            'immuneTo' => [],
-        ];
-
-        if (!empty($attrMatches[1])) {
-            $attr = explode('; ', $attrMatches[1]);
+        if (!empty($m[3])) {
+            $attr = explode('; ', $m[3]);
 
             foreach ($attr as $item) {
                 if (strpos($item, 'weak to') === 0) {
-                    $group->weakTo = explode(', ', substr($item, 8));
+                    $unit->weakTo = array_flip(explode(', ', substr($item, 8)));
                 } elseif (strpos($item, 'immune to') === 0) {
-                    $group->immuneTo = explode(', ', substr($item, 10));
+                    $unit->immuneTo = array_flip(explode(', ', substr($item, 10)));
                 }
             }
         }
 
         if ($key) {
-            $infection[] = $group;
+            $infection[] = $unit;
         } else {
-            $immune[] = $group;
+            $immune[] = $unit;
         }
-        $groups[] = $group;
+        $groups[] = $unit;
     }
 }
 
 
 function cloneGroups($groups, $boost = 0)
 {
-    $newGroups = $infections = $immune = [];
+    $newGroups = [];
 
     foreach ($groups as $item) {
         $newItem = clone $item;
 
         if ($newItem->type === 'immune') {
-            $newItem->dmg += $boost;
-            $newItem->power = $newItem->dmg * $newItem->units;
+            $newItem->damage += $boost;
+            $newItem->power = $newItem->damage * $newItem->count;
         }
 
         $newGroups[] = $newItem;
-
-        if ($newItem->type === 'immune') {
-            $immune[] = $newItem;
-        } else {
-            $infections[] = $newItem;
-        }
     }
 
-    return [$newGroups, $immune, $infections];
+    return $newGroups;
 }
 
-function battle($groups, $infection, $immune)
+function battle(array $groups)
 {
     global $sort;
 
     while (true) {
         // Phase 1 - target selection
         usort($groups, $sort['byPowerAndInitiative']);
+        $targetsSet = new Ds\Set();
 
         foreach ($groups as $group) {
-            $targets = $group->type === 'immune' ? $infection : $immune;
-
             $damageMap = [];
 
-            foreach ($targets as $key => $target) {
-                // Check if this isn't already a target to someone else
-                foreach ($groups as $group2) {
-                    if (isset($group2->target) && $group2->target === $target) {
-                        continue 2;
-                    }
-                }
-
-                if (in_array($group->dmgType, $target->immuneTo)) {
+            foreach ($groups as $key => $target) {
+                if ($targetsSet->contains($target)
+                    || $target->type === $group->type
+                    || isset($target->immuneTo[$group->damageType])
+                ) {
                     continue;
-                } elseif (in_array($group->dmgType, $target->weakTo)) {
-                    $damage = $group->power * 2;
-                } else {
-                    $damage = $group->power;
                 }
 
-                $damageMap[$key][$damage][$target->power] = $target->init;
+                $damage = isset($target->weakTo[$group->damageType]) ? $group->power * 2 : $group->power;
+                $damageMap[$key][$damage][$target->power] = $target->initiative;
             }
 
             uasort($damageMap, $sort['byDamagePowerAndInitiative']);
-            $group->target = empty($damageMap) ? null : $targets[key($damageMap)];
+            $group->target = empty($damageMap) ? null : $groups[key($damageMap)];
+            $targetsSet->add($group->target);
         }
 
         // Phase 2 - attack
         $hasCasualties = false;
         usort($groups, $sort['byInitiative']);
 
-        foreach ($groups as $group) if ($group->units && $group->target) {
+        foreach ($groups as $group) if ($group->count && $group->target) {
             $target        = $group->target;
             $group->target = null;
 
-            if (in_array($group->dmgType, $target->weakTo)) {
-                $damage = $group->power * 2;
-            } else {
-                $damage = $group->power;
-            }
+            $damage = isset($target->weakTo[$group->damageType]) ? $group->power * 2 : $group->power;
 
-            $killedUnits = (int) floor($damage / $target->hp);
-            if ($killedUnits > 0) {
-                $hasCasualties = true;
-            }
-            if ($killedUnits > $target->units) {
-                $killedUnits = $target->units;
-            }
-            $target->units -= $killedUnits;
-            $target->power = $target->units * $target->dmg;
+            $killedUnits = (int) ($damage / $target->health);
+            if ($killedUnits > $target->count) $killedUnits = $target->count;
+
+            $hasCasualties = $hasCasualties || $killedUnits > 0;
+            $target->count -= $killedUnits;
+            $target->power = $target->count * $target->damage;
         }
 
         if (!$hasCasualties) {
@@ -156,25 +145,17 @@ function battle($groups, $infection, $immune)
         }
 
         // Check
+        $count1 = $count2 = 0;
+
         foreach ($groups as $key => $group) {
-            if ($group->units <= 0) {
+            if ($group->count <= 0) {
                 unset($groups[$key]);
+            } else {
+                $group->type === 'immune' ? $count1++ : $count2++;
             }
         }
 
-        foreach ($immune as $key => $group) {
-            if ($group->units <= 0) {
-                unset($immune[$key]);
-            }
-        }
-
-        foreach ($infection as $key => $group) {
-            if ($group->units <= 0) {
-                unset($infection[$key]);
-            }
-        }
-
-        if (empty($immune) || empty($infection)) {
+        if (!$count1 || !$count2) {
             break;
         }
     }
@@ -182,30 +163,29 @@ function battle($groups, $infection, $immune)
     return $groups;
 }
 
-[$cloneGroups, $cloneImmune, $cloneInfection] = cloneGroups($groups, 0);
-$result = battle($cloneGroups, $cloneInfection, $cloneImmune);
+$cloneGroups = cloneGroups($groups, 0);
+$result = battle($cloneGroups);
 
 $sum = 0;
 
 foreach ($result as $group) {
-    $sum += $group->units;
+    $sum += $group->count;
 }
 
 echo 'Answer 1: ' . $sum . PHP_EOL;
-echo 'Execution time: ' . (microtime(true) - $start) . PHP_EOL;
 
 $boost = 1;
 $leastBoost = null;
 
 while (true) {
-    [$cloneGroups, $cloneImmune, $cloneInfection] = cloneGroups($groups, $boost);
-    $result = battle($cloneGroups, $cloneInfection, $cloneImmune);
+    $cloneGroups = cloneGroups($groups, $boost);
+    $result = battle($cloneGroups);
 
     if ($result && current($result)->type === 'immune') {
         $sum = 0;
 
         foreach ($result as $group) {
-            $sum += $group->units;
+            $sum += $group->count;
         }
 
         $leastBoost = $sum;
